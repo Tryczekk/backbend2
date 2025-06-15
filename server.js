@@ -63,6 +63,12 @@ app.post('/api/use', (req, res) => {
   res.json({ success: true, uses: tokens[idx].uses });
 });
 
+// Get all tokens (for admin panel)
+app.get('/api/tokens', (req, res) => {
+  const tokens = readTokens();
+  res.json(tokens);
+});
+
 // Serve static files (frontend)
 app.use(express.static(__dirname));
 
