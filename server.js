@@ -27,13 +27,13 @@ function writeTokens(tokens) {
 
 // Add new token
 app.post('/api/token', (req, res) => {
-  const { token, uses = 1 } = req.body;
+  const { token, uses = 1, username = '' } = req.body;
   if (!token) return res.status(400).json({ error: 'Token required' });
   let tokens = readTokens();
   if (tokens.find(t => t.token === token)) {
     return res.status(409).json({ error: 'Token already exists' });
   }
-  tokens.push({ token, uses });
+  tokens.push({ token, uses, username });
   writeTokens(tokens);
   res.json({ success: true });
 });
@@ -67,6 +67,51 @@ app.post('/api/use', (req, res) => {
 app.get('/api/tokens', (req, res) => {
   const tokens = readTokens();
   res.json(tokens);
+});
+
+// Usuń token
+app.delete('/api/token/:token', (req, res) => {
+  let tokens = readTokens();
+  const tokenVal = req.params.token;
+  const idx = tokens.findIndex(t => t.token === tokenVal);
+  if (idx === -1) return res.status(404).json({ error: 'Token not found' });
+  tokens.splice(idx, 1);
+  writeTokens(tokens);
+  res.json({ success: true });
+});
+
+// Reaktywuj token (ustaw uses na 1)
+app.patch('/api/token/:token/reactivate', (req, res) => {
+  let tokens = readTokens();
+  const tokenVal = req.params.token;
+  const idx = tokens.findIndex(t => t.token === tokenVal);
+  if (idx === -1) return res.status(404).json({ error: 'Token not found' });
+  tokens[idx].uses = 1;
+  writeTokens(tokens);
+  res.json({ success: true });
+});
+
+// Wyłącz token (ustaw uses na 0)
+app.patch('/api/token/:token/disable', (req, res) => {
+  let tokens = readTokens();
+  const tokenVal = req.params.token;
+  const idx = tokens.findIndex(t => t.token === tokenVal);
+  if (idx === -1) return res.status(404).json({ error: 'Token not found' });
+  tokens[idx].uses = 0;
+  writeTokens(tokens);
+  res.json({ success: true });
+});
+
+// Resetuj uses tokenu
+app.patch('/api/token/:token/reset', (req, res) => {
+  let tokens = readTokens();
+  const tokenVal = req.params.token;
+  const { uses } = req.body;
+  const idx = tokens.findIndex(t => t.token === tokenVal);
+  if (idx === -1) return res.status(404).json({ error: 'Token not found' });
+  tokens[idx].uses = Number(uses);
+  writeTokens(tokens);
+  res.json({ success: true });
 });
 
 // Serve static files (frontend)
