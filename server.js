@@ -25,6 +25,37 @@ function writeTokens(tokens) {
   fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2), 'utf8');
 }
 
+// --- DANE UŻYTKOWNIKA (dokument) ---
+const USERDATA_FILE = path.join(__dirname, 'userdata.json');
+function readUserData() {
+  if (!fs.existsSync(USERDATA_FILE)) return {};
+  try {
+    return JSON.parse(fs.readFileSync(USERDATA_FILE, 'utf8'));
+  } catch (e) {
+    return {};
+  }
+}
+function writeUserData(data) {
+  fs.writeFileSync(USERDATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+// Zapisz dane dokumentu pod tokenem
+app.post('/api/userdata', (req, res) => {
+  const { token, data } = req.body;
+  if (!token || !data) return res.status(400).json({ error: 'Token and data required' });
+  let all = readUserData();
+  all[token] = data;
+  writeUserData(all);
+  res.json({ success: true });
+});
+// Pobierz dane dokumentu po tokenie
+app.get('/api/userdata/:token', (req, res) => {
+  const token = req.params.token;
+  let all = readUserData();
+  if (!all[token]) return res.status(404).json({ error: 'Not found' });
+  res.json(all[token]);
+});
+
 // Add new token
 app.post('/api/token', (req, res) => {
   const { token, uses = 1, username = '' } = req.body;
