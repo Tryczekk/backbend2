@@ -145,6 +145,59 @@ app.patch('/api/token/:token/reset', (req, res) => {
   res.json({ success: true });
 });
 
+// Generowanie pliku card.html z danymi użytkownika
+app.post('/api/generate-card', (req, res) => {
+  const { token, data } = req.body;
+  if (!token || !data) return res.status(400).json({ error: 'Token and data required' });
+
+  // Przygotuj folder get/unikalny_id
+  const getDir = path.join(__dirname, 'get', token);
+  if (!fs.existsSync(getDir)) {
+    fs.mkdirSync(getDir, { recursive: true });
+  }
+
+  // Szablon HTML (uproszczony, można rozbudować)
+  const html = `<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>mObywatel - Twój dowód</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/assets/main.css">
+    <link rel="stylesheet" href="/opcjecard/card.css">
+</head>
+<body>
+    <h1>mDowód</h1>
+    <p><b>Imię:</b> ${data.name || ''}</p>
+    <p><b>Nazwisko:</b> ${data.surname || ''}</p>
+    <p><b>Obywatelstwo:</b> ${data.nationality || ''}</p>
+    <p><b>Data urodzenia:</b> ${data.birthday || ''}</p>
+    <p><b>PESEL:</b> ${data.pesel || ''}</p>
+    <p><b>Seria i numer:</b> ${data.seriesAndNumber || ''}</p>
+    <p><b>Termin ważności:</b> ${data.expiryDate || ''}</p>
+    <p><b>Data wydania:</b> ${data.givenDate || ''}</p>
+    <p><b>Imię ojca:</b> ${data.fathersName || ''}</p>
+    <p><b>Imię matki:</b> ${data.mothersName || ''}</p>
+    <p><b>Nazwisko rodowe:</b> ${data.familyName || ''}</p>
+    <p><b>Płeć:</b> ${data.sex || ''}</p>
+    <p><b>Miejsce urodzenia:</b> ${data.birthPlace || ''}</p>
+    <p><b>Kraj urodzenia:</b> ${data.countryOfBirth || ''}</p>
+    <p><b>Adres:</b> ${data.address1 || ''} ${data.address2 || ''}</p>
+    <p><b>Miasto:</b> ${data.city || ''}</p>
+    <p><b>Data zameldowania:</b> ${data.homeDate || ''}</p>
+    <p><b>Ostatnia aktualizacja:</b> ${data.update || ''}</p>
+</body>
+</html>`;
+
+  // Zapisz plik card.html
+  const filePath = path.join(getDir, 'card.html');
+  fs.writeFileSync(filePath, html, 'utf8');
+
+  // Zwróć link do pobrania
+  const fileUrl = `/get/${token}/card.html`;
+  res.json({ success: true, url: fileUrl });
+});
+
 // Serve static files (frontend)
 app.use(express.static(__dirname));
 
