@@ -64,7 +64,8 @@ app.post('/api/token', (req, res) => {
   if (tokens.find(t => t.token === token)) {
     return res.status(409).json({ error: 'Token already exists' });
   }
-  tokens.push({ token, uses, username });
+  // Zawsze zapisuj username (jeśli przesłany)
+  tokens.push({ token, uses, username: username || '' });
   writeTokens(tokens);
   res.json({ success: true });
 });
@@ -207,3 +208,97 @@ app.use(express.static(__dirname));
 app.listen(PORT, () => {
   console.log(`Token server running on http://localhost:${PORT}`);
 });
+
+// --- GENERATOR DANYCH OSOBOWYCH ---
+function generatePersonalData(imie, nazwisko, plec, dataUrodzenia) {
+  // dataUrodzenia: 'dd.mm.rrrr'
+  const [day, month, year] = dataUrodzenia.split('.').map(Number);
+
+  // PESEL: YYMMDD + 4 cyfry + cyfra kontrolna
+  let peselYear = year % 100;
+  let peselMonth = month;
+  if (year >= 2000 && year < 2100) peselMonth += 20;
+  // YYMMDD
+  const peselBase = [
+    peselYear.toString().padStart(2, '0'),
+    peselMonth.toString().padStart(2, '0'),
+    day.toString().padStart(2, '0')
+  ].join('');
+
+  // 4 losowe cyfry: ostatnia nieparzysta (M) lub parzysta (K)
+  let random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  let sexDigit;
+  if (plec === 'M') {
+    sexDigit = (2 * Math.floor(Math.random() * 5) + 1).toString(); // 1,3,5,7,9
+  } else {
+    sexDigit = (2 * Math.floor(Math.random() * 5)).toString(); // 0,2,4,6,8
+  }
+  const peselWithoutChecksum = peselBase + random + sexDigit;
+
+  // Cyfra kontrolna
+  const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
+  let sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(peselWithoutChecksum[i], 10) * weights[i];
+  }
+  const checksum = (10 - (sum % 10)) % 10;
+  const pesel = peselWithoutChecksum + checksum;
+
+  // Data wydania dowodu
+  const wydanieDayAdd = Math.random() < 0.5 ? 4 : 8;
+  let wydanieDay = day + wydanieDayAdd;
+  const wydanieMonth = month;
+  const wydanieYear = year;
+  // Sprawdź ostatni dzień miesiąca
+  const lastDay = new Date(wydanieYear, wydanieMonth, 0).getDate();
+  if (wydanieDay > lastDay) wydanieDay = lastDay;
+  const dataWydania = [
+    wydanieDay.toString().padStart(2, '0'),
+    wydanieMonth.toString().padStart(2, '0'),
+    wydanieYear
+  ].join('.');
+
+  // Data ważności dowodu
+  const dataWaznosci = [
+    wydanieDay.toString().padStart(2, '0'),
+    wydanieMonth.toString().padStart(2, '0'),
+    (wydanieYear + 10)
+  ].join('.');
+
+  return {
+    imie,
+    nazwisko,
+    plec,
+    dataUrodzenia,
+    pesel,
+    dataWydania,
+    dataWaznosci
+  };
+}
+
+function parsePESEL(pesel) {
+  if (!/^[0-9]{11}$/.test(pesel)) throw new Error('Nieprawidłowy PESEL');
+  let year = parseInt(pesel.slice(0, 2), 10);
+  let month = parseInt(pesel.slice(2, 4), 10);
+  let day = parseInt(pesel.slice(4, 6), 10);
+
+  let century = 1900;
+  if (month > 80) { century = 1800; month -= 80; }
+  else if (month > 60) { century = 2200; month -= 60; }
+  else if (month > 40) { century = 2100; month -= 40; }
+  else if (month > 20) { century = 2000; month -= 20; }
+
+  year = century + year;
+  const dataUrodzenia = [
+    day.toString().padStart(2, '0'),
+    month.toString().padStart(2, '0'),
+    year
+  ].join('.');
+
+  const sex = (parseInt(pesel[9], 10) % 2 === 1) ? 'M' : 'K';
+
+  return {
+    dataUrodzenia,
+    plec: sex
+  };
+}
