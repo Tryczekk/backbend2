@@ -168,6 +168,9 @@ app.post('/api/generate-card', (req, res) => {
 </head>
 <body>
     <h1>mDowód</h1>
+    <div style="margin-bottom:20px;">
+      <img src="${data.image || ''}" alt="Zdjęcie" style="max-width:160px;max-height:200px;border-radius:10px;box-shadow:0 2px 12px #0006;" />
+    </div>
     <p><b>Imię:</b> ${data.name || ''}</p>
     <p><b>Nazwisko:</b> ${data.surname || ''}</p>
     <p><b>Obywatelstwo:</b> ${data.nationality || ''}</p>
