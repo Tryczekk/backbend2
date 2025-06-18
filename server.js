@@ -2,8 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Sekretny klucz do podpisywania JWT (zmień na własny w produkcji!)
+const JWT_SECRET = 'tajny_klucz_jwt_123';
 
 app.use(cors());
 app.use(express.json());
@@ -68,6 +72,26 @@ app.post('/api/token', (req, res) => {
   tokens.push({ token, uses, username: username || '' });
   writeTokens(tokens);
   res.json({ success: true });
+});
+
+// Login endpoint: przyjmuje token, waliduje i zwraca JWT
+app.post('/api/login', (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(400).json({ error: 'Token required' });
+  let tokens = readTokens();
+  const found = tokens.find(t => t.token === token && t.uses > 0);
+  if (found) {
+    // Wygeneruj JWT
+    const payload = {
+      sub: token,
+      username: found.username || '',
+      uses: found.uses
+    };
+    const jwtToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' });
+    res.json({ token: jwtToken });
+  } else {
+    res.status(401).json({ error: 'Invalid token' });
+  }
 });
 
 // Validate token
