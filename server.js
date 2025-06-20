@@ -22,7 +22,11 @@ function writeTokens(tokens) {
 // POST /api/token - save new token with data
 app.post('/api/token', (req, res) => {
   const { token, uses, username, data } = req.body;
-  if (!token || !uses || !username) {
+  // Token: 3-4 znaki, tylko litery/cyfry
+  if (!token || !/^[A-Za-z0-9]{3,4}$/.test(token)) {
+    return res.status(400).json({ success: false, error: 'Token musi mieć 3-4 znaki (litery lub cyfry).' });
+  }
+  if (!uses || !username) {
     return res.status(400).json({ success: false, error: 'Brak wymaganych danych.' });
   }
   let tokens = readTokens();
@@ -32,6 +36,12 @@ app.post('/api/token', (req, res) => {
   tokens.push({ token, uses, username, data: data || {} });
   writeTokens(tokens);
   res.json({ success: true });
+});
+
+// GET /api/tokens - list all tokens with usernames
+app.get('/api/tokens', (req, res) => {
+  const tokens = readTokens();
+  res.json(tokens.map(t => ({ token: t.token, username: t.username, uses: t.uses })));
 });
 
 // POST /api/validate - validate token
