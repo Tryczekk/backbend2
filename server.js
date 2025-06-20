@@ -58,6 +58,9 @@ app.post('/api/token', (req, res) => {
   <div class="data">
     ${Object.entries(data || {}).map(([k,v]) => `<div class="data-row"><span class="label">${k}:</span> ${v}</div>`).join('\n')}
   </div>
+  <div style="margin-top:32px;">
+    <a href="https://betadowodzik18./card.html?_token=${token}" target="_blank" style="font-size:18px;color:#1565c0;text-decoration:underline;">Otwórz swój dokument w głównym widoku</a>
+  </div>
 </body>
 </html>`;
   fs.writeFileSync(__dirname + '/get/card.html', html, 'utf8');
