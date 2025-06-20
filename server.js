@@ -7,6 +7,8 @@ const TOKENS_FILE = 'tokens.json';
 
 app.use(cors());
 app.use(express.json());
+// Serwowanie plików statycznych z katalogu głównego
+app.use(express.static(__dirname));
 
 // Helper: read tokens from file
 function readTokens() {
