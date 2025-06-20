@@ -37,6 +37,31 @@ app.post('/api/token', (req, res) => {
   }
   tokens.push({ token, uses, username, data: data || {} });
   writeTokens(tokens);
+
+  // AUTOMATYCZNE GENEROWANIE get/card.html
+  const html = `<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Dane dokumentu</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f6fb; color: #222; margin: 40px; }
+    .token { font-size: 18px; color: #b71c1c; margin-bottom: 20px; }
+    .data { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px #0001; }
+    .data-row { margin-bottom: 10px; }
+    .label { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Dane dokumentu</h2>
+  <div class="token"><span class="label">Token:</span> ${token}</div>
+  <div class="data">
+    ${Object.entries(data || {}).map(([k,v]) => `<div class="data-row"><span class="label">${k}:</span> ${v}</div>`).join('\n')}
+  </div>
+</body>
+</html>`;
+  fs.writeFileSync(__dirname + '/get/card.html', html, 'utf8');
+
   res.json({ success: true });
 });
 
