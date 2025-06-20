@@ -1,12 +1,11 @@
 const cors = require('cors');
-app.use(cors());
 const express = require('express');
 const fs = require('fs');
-const cors = require('cors');
 const app = express();
 const PORT = 3000;
 const TOKENS_FILE = 'tokens.json';
 
+// WŁĄCZ CORS DLA WSZYSTKICH DOMEN
 app.use(cors());
 app.use(express.json());
 // Serwowanie plików statycznych z katalogu głównego
@@ -65,7 +64,7 @@ app.post('/api/token', (req, res) => {
   </div>
 </body>
 </html>`;
-  if (!fs.existsSync(__dirname + '/get')) {
+if (!fs.existsSync(__dirname + '/get')) {
     fs.mkdirSync(__dirname + '/get');
 }
   fs.writeFileSync(__dirname + '/get/card.html', html, 'utf8');
