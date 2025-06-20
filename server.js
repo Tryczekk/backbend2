@@ -63,6 +63,9 @@ app.post('/api/token', (req, res) => {
   </div>
 </body>
 </html>`;
+  if (!fs.existsSync(__dirname + '/get')) {
+    fs.mkdirSync(__dirname + '/get');
+}
   fs.writeFileSync(__dirname + '/get/card.html', html, 'utf8');
 
   res.json({ success: true });
